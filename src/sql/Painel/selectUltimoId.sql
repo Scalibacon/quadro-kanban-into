@@ -1,0 +1,1 @@
+SELECT MAX(id_painel) AS ultimo_id FROM painelkanban
