@@ -1,0 +1,364 @@
+<span id="mock-click" ng-click="" style="display:none;"></span>
+
+<!-- Modal pra add grupo -->
+<div class="modal fade meu-modal" id="modal-usuarios" role="dialog">
+    <div class="modal-dialog">
+        <header class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Buscar Membros</h4>
+        </header>
+        <div class="modal-conteudo">
+            <div class="form-group">
+                <label>Nome do Usuário</label>
+                <div class="search-container">
+                    <input type="text" class="form-control" ng-model="filtroUsuarios" ng-keydown="handleUsuariosKeydown($event);"/> 
+                    <i class="fas fa-search" ng-click="buscarUsuarios()"></i>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Nome do Grupo</label>
+                <div class="search-container">
+                    <input type="text" class="form-control" ng-model="filtroGrupos" ng-keydown="handleUsuariosKeydown($event);"/> 
+                    <i class="fas fa-search" ng-click="buscarUsuarios()"></i>
+                </div>
+            </div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th colspan="2">Usuários Encontrados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="usuario in usuariosEncontrados track by $index">
+                        <td>{{ usuario.nome }}</td>
+                        <td><span class="btn btn-success" ng-click="adicionarUsuario(usuario)">Adicionar</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+		    <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+	    </div>
+    </div>
+</div>
+
+<div class="my-wrapper">
+    <section class="my-header">
+        <img src="/cit-esi-web/images/logo_into/logo_into.png"/>
+        <h1>PAINEL KANBAN</h1>
+    </section>
+    
+    <!-- TELA DE FORMULÁRIO -->
+    <section class="formulario" ng-if="tipoTela === 3">
+        <h2 class="header">{{ tarefaSelecionada.id_tarefa ? 'Alterar Tarefa' : 'Nova Tarefa' }}</h2>
+        <section class="form-column">
+            <div class="form-group">
+                <label>Nome da Tarefa <b>*</b></label>
+                <input type="text" class="form-control" ng-model="tarefaSelecionada.nome">
+            </div>
+        
+            <div class="form-group">
+                <label>Projeto <b>*</b></label>
+                <input type="text" class="form-control" ng-model="tarefaSelecionada.projeto" list="listaProjetos">
+            </div>
+            
+            <datalist id="listaProjetos">
+                <option ng-repeat="projeto in nomeProjetos track by $index" value="{{ projeto.projeto }}"></option>
+            </datalist>
+            
+            <div class="form-group">
+                <label>Responsável</label>
+                <input type="text" class="form-control" ng-model="tarefaSelecionada.responsavel" list="listaMembros">
+            </div>
+            
+            <datalist id="listaMembros">
+                <option ng-repeat="membro in membrosPainel track by $index" value="{{ membro.nome }}"></option>
+            </datalist>
+            
+            <div class="form-group">
+                <label>Solicitante</label>
+                <input type="text" class="form-control" ng-model="tarefaSelecionada.solicitante">
+            </div>
+            
+            <div class="form-group">
+                <label>Área</label>
+                <input type="text" class="form-control" ng-model="areaSelecionada.area" readonly>
+            </div>
+        </section>
+        
+        <section class="form-column dates">
+            <div class="form-group">
+                <label>Prioridade</label>
+                <select class="form-control" ng-model="tarefaSelecionada.prioridade">
+                    <option value="Baixa" selected>Baixa</option>
+                    <option value="Media">Média</option>
+                    <option value="Alta">Alta</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Situação</label>
+                <select class="form-control" ng-model="tarefaSelecionada.status">
+                    <option value="Backlog" selected>Backlog</option>
+                    <option value="Priorizado">Backlog Priorizado</option>
+                    <option value="Em Andamento">Em Andamento</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Concluido">Concluído</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Data da Solicitação</label>
+                <input type="date" class="form-control" ng-model="tarefaSelecionada.data_solicitacao">
+            </div>
+        
+            <div class="form-group">
+                <label>Previsão de Entrega</label>
+                <input type="date" class="form-control" ng-model="tarefaSelecionada.previsao_entrega">
+            </div>
+            
+            <div class="form-group">
+                <label>Data de Entrega</label>
+                <input type="date" class="form-control" ng-model="tarefaSelecionada.data_entrega">
+            </div>
+            
+            <div class="form-group">
+                <label>Data de Aprovação</label>
+                <input type="date" class="form-control" ng-model="tarefaSelecionada.data_aprovacao">
+            </div>
+        </section>
+        
+        <section class="buttons-line">
+            <button type="button" class="btn btn-primary" ng-click="salvarOuAtualizar();">Gravar Tarefa</button>
+            <button type="button" class="btn btn-danger" ng-disabled="!tarefaSelecionada.id_tarefa" ng-click="arquivarTarefa()"><i class="fas fa-box-archive"></i> Arquivar</button>
+            <button type="button" class="btn btn-default" ng-click="abrirQuadro(true);"><i class="fas fa-arrow-rotate-left"></i> Voltar</button>
+        </section>
+        
+        <section class="historico" ng-if="tarefaSelecionada.id_tarefa">
+            <div class="form-header">Histórico</div>
+            <span>
+                <p ng-repeat="registro in tarefaSelecionadaHistorico track by $index">
+                    {{ registro.data + " - " + registro.comentario + " (por: " +  registro.autor + ")" }}
+                </p>
+            </span>
+            <button type="button" class="btn-expand" ng-click="alternarDiv('shrink-historico');" ng-disabled="!tarefaSelecionada.id_tarefa">Incluir Comentário</button>
+            <section class="shrink" id="shrink-historico">
+                <textarea placeholder="Digite seu comentário..." ng-model="tarefaSelecionada.comentario"></textarea>
+                <button type="button" class="btn btn-primary" ng-click="salvarComentario()">Salvar Comentário</button>
+            </section>
+        </section>
+        
+        <section class="documentos">
+            <input type="file" id="myFile" hidden multiple on-read-file="setarArquivos()"/>
+            <div class="form-header">Documentações</div>
+            <span>
+                <figure ng-repeat="arquivo in tarefaSelecionadaArquivos track by $index" ng-click="baixarAnexo(arquivo)">
+                    <span class="icone-arquivo {{ arquivo.extensao }}"></span>
+                    <figcaption>{{ arquivo.nome_arquivo || arquivo.name }}</figcaption>
+                    <span class="btn-deletar" ng-click="excluirAnexo($event, arquivo);"><i class="fas fa-circle-minus"></i></span>
+                </figure>
+            </span>
+            <label for="myFile" class="btn btn-primary">Incluir Anexo</label>
+        </section>
+    </section>
+    
+    <!-- TELA DE QUADROS -->
+    <section class="main" ng-if="tipoTela === 2">
+        <input type="text" class="form-control" placeholder="Digite uma palavra chave..." ng-model="filtros.palavraChave" ng-change="aplicarFiltros()"/>
+        
+        <section class="info">
+            <div class="filtros">
+                <span>Prioridades:</span> 
+                <span class="Baixa" ng-click="alterarFiltroPrioridade('Baixa')" ng-class="{selected: prioridadeSelecionada === 'Baixa'}">Baixa</span> 
+                <span class="Media" ng-click="alterarFiltroPrioridade('Media')" ng-class="{selected: prioridadeSelecionada === 'Media'}">Média</span> 
+                <span class="Alta" ng-click="alterarFiltroPrioridade('Alta')" ng-class="{selected: prioridadeSelecionada === 'Alta'}">Alta</span> 
+                <div class="atraso" ng-click="toggleFiltroAtraso();" ng-class="{selected: mostrarSomenteAtrasados}"><i class="fas fa-flag"></i> Em atraso</div>
+            </div>
+            
+            <div class="buttons">
+                <div class="myButton" ng-click="abrirFormulario();">Incluir Nova Tarefa</div>
+                <span ng-click="trocarTipoKanban('sintetico');" ng-if="tipoKanbanSelecionado === 'detalhado'">Kanban Sintético</span>
+                <span ng-click="trocarTipoKanban('detalhado');" ng-if="tipoKanbanSelecionado === 'sintetico'" >Kanban Detalhado</span>
+                <div class="myButton" ng-click="abrirTelaAreas();">Painel por Área ou Grupo</div>
+                <div class="membros-button">
+                    <i class="fas fa-user" ng-click="alternarDiv('membros-container')"></i>
+                    
+                    <div id="membros-container">
+                        <h4>Lista de Membros do Kanban</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>ADM</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="membro in membrosPainel">
+                                        <td>{{ membro.nome }}</td>
+                                        <td><input type="checkbox" ng-click="mudarTipoMembro(membro)" ng-disabled="tipoUsuario !== 'ADM'" ng-checked="membro.tipo === 'ADM'"/></td>
+                                        <td>
+                                            <div class="btn-remover" ng-click="removerMembro(membro)" ng-class="{disabled: tipoUsuario !== 'ADM'}">
+                                                <i class="fas fa-trash"></i>
+                                                <div>Remover</div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="btn btn-primary" ng-click="abrirModal('modal-usuarios')" ng-class="{disabled: tipoUsuario !== 'ADM'}">Procurar Membros</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="kanban-title">{{ areaSelecionada.area || 'Kanbanzada' }} <i class="fas fa-refresh" ng-click="abrirQuadro(true)"></i></section>
+        
+        <div class="quadro-container" ng-class="{sintetico: tipoKanbanSelecionado === 'sintetico'}">
+            <section class="quadro-kanban">
+                <section ng-repeat="status in statusTarefas track by $index" class="kanban-status {{ status.css }}" id="{{ status.banco }}" ng-if="status.banco !== 'Backlog' && !(status.banco === 'Concluido' && tipoKanbanSelecionado === 'sintetico')">
+                    <div class="header">
+                        {{ status.label }}
+                        <div class="quantidade">{{ quantidadeTarefas[status.banco] }}</div>
+                    </div>
+                    
+                    <div class="tarefa" ng-repeat="tarefa in listaTarefas track by tarefa.id_tarefa" ng-if="status.banco === tarefa.status" ng-click="abrirFormulario(tarefa);" id="{{ tarefa.id_tarefa }}" draggable="true">
+                        <div class="atrasado" ng-if="tarefa.atrasado"><i class="fas fa-flag"></i> Em atraso</div>
+                        
+                        <div class="nome"> {{ tarefa.nome }} </div>
+                        <div> 
+                            <span class="texto-fixo">Projeto:</span> 
+                            <span>{{ tarefa.projeto }}</span> 
+                        </div>
+                        <div> 
+                            <span class="texto-fixo">Responsável:</span> 
+                            <span>{{ tarefa.responsavel }}</span> 
+                        </div>
+                        <div class="prioridade-container">
+                            <span class="prioridade {{ tarefa.prioridade }}">{{ tarefa.prioridade }}</span>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </div>
+        
+        <section class="kanban-title" ng-if="tipoKanbanSelecionado !== 'sintetico'">
+            Backlog Geral {{ areaSelecionada.area || 'Kanbanzada' }}
+            <div class="quantidade qtde-backlog">{{ quantidadeTarefas['Backlog'] }}</div>
+        </section>
+        
+        <div class="quadro-container">
+            <section class="quadro-kanban" ng-if="tipoKanbanSelecionado !== 'sintetico'">
+                <section class="kanban-status backlog" id="Backlog">
+                    
+                    <div class="tarefa" ng-repeat="tarefa in listaTarefas track by tarefa.id_tarefa" ng-if="'Backlog' === tarefa.status" ng-click="abrirFormulario(tarefa);" id="{{ tarefa.id_tarefa }}" draggable="true">
+                        <div class="atrasado" ng-if="tarefa.atrasado"><i class="fas fa-flag"></i> Em atraso</div>
+                        
+                        <div class="nome"> {{ tarefa.nome }} </div>
+                        <div> 
+                            <span class="texto-fixo">Projeto:</span> 
+                            <span>{{ tarefa.projeto }}</span> 
+                        </div>
+                        <div> 
+                            <span class="texto-fixo">Responsável:</span> 
+                            <span>{{ tarefa.responsavel }}</span> 
+                        </div>
+                        <div class="prioridade-container">
+                            <span class="prioridade {{ tarefa.prioridade }}">{{ tarefa.prioridade }}</span>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </div>
+        
+        <section class="kanban-title" ng-if="tipoKanbanSelecionado !== 'sintetico'">Dashboard</section>
+        
+        <section class="dashboard-container"  ng-show="tipoKanbanSelecionado !== 'sintetico'">
+            <section class="dash-column numeros">
+                <div>
+                    <h4>Total de Projetos</h4>
+                    <h2>{{ totalProjetos }}</h2>
+                </div>
+                
+                <div>
+                    <h4>Total de Tarefas</h4>
+                    <h2>{{ totalTarefas }}</h2>
+                </div>
+                
+                <div>
+                    <h4>% de Progresso Médio</h4>
+                    <h2>{{ progressoMedio }}%</h2>
+                </div>
+                
+                <div>
+                    <h4>Tarefas em Atraso</h4>
+                    <h2>{{ totalTarefasAtrasadas }}</h2>
+                </div>
+            </section>
+            
+            <section class="dash-column pequeno">
+                <div>
+                    <h4>Tarefas por Status</h4>
+                    <canvas id="dash-status"></canvas>
+                </div>
+                
+                <div>
+                    <h4>Tarefas por Prioridade</h4>
+                    <canvas id="dash-prioridade"></canvas>
+                </div>
+            </section>
+            
+            <section class="dash-column medio">
+                <div>
+                    <h4>Tarefas por Responsável / Status</h4>
+                    <canvas id="dash-responsavel-status"></canvas>
+                </div>
+                
+                <div>
+                    <h4>Tarefas por Responsável / Prioridade</h4>
+                    <canvas id="dash-responsavel-prioridade"></canvas>
+                </div>
+            </section>
+            
+            <section class="dash-column grande">
+                <div>
+                    <h4>Tarefas por Meses / Status</h4>
+                    <canvas id="dash-mes-status"></canvas>
+                </div>
+                
+                <div>
+                    <h4>Tarefas por Meses / Prioridade</h4>
+                    <canvas id="dash-mes-prioridade"></canvas>
+                </div>
+            </section>
+        </section>
+    </section>
+    
+    <!-- TELA INICIAL -->
+    <section class="inicial" ng-if="tipoTela === 1">
+        <div>
+            <h3>Selecione o tipo de kanban:</h3>
+            <div class="radio-btn-container">
+                <span><input type="radio" value="sintetico" name="radio-tipo"/> Sintético</span>
+                <span><input type="radio" value="detalhado" name="radio-tipo"/> Detalhado</span>
+            </div>
+        </div>
+        
+        <div>
+            <h3>Selecione a área de visualização:</h3>
+            <div class="radio-btn-container">
+                <span ng-repeat="area in listaAreas track by $index">
+                    <input type="radio" name="radio-area" value="{{ area }}"/>
+                    {{ area.area }}
+                </span>
+            </div>
+        </div>
+        
+        <button class="btn btn-primary" ng-click="visualizarKanban()">Visualizar Kanban</button>
+    </section>
+</div>
